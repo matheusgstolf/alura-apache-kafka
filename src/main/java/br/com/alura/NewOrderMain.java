@@ -1,27 +1,35 @@
 package br.com.alura;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Properties;
-import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringSerializer;
-import java.util.Properties;
 
 public class NewOrderMain {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws ExecutionException, InterruptedException {
         var producer = new KafkaProducer<String, String>(properties());
-        var value = "1,1,500.00";
-        var record = new ProducerRecord<String,String>("ECOMMERCE_NEW_ORDER",value);
-        producer.send(record);
+        var value = "132123, 67523, 7894589745";
+        var record = new ProducerRecord<>("ECOMMERCE_NEW_ORDER",value, value);
+        producer.send(record, (data, ex) -> {
+            if (ex != null) {
+                ex.printStackTrace();
+                return;
+            }
+            System.out.println("sucesso enviando " + data.topic() + ":::partition " + data.partition() + "/ offset " + data.offset() + "/ timestamp " + data.timestamp());
+        }).get();
     }
 
     private static Properties properties() {
-        var properties = new Properties();
-        properties.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "127.0.0.1:9092"); //Estabelecer conexão com servidor Kafka
-        properties.setProperty(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName()); //Serializador de String para byte para a Key do Map
-        properties.setProperty(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName()); //Serializador de String para byte para o Value do Map
-        return properties;
+       var properties = new Properties();
+       properties.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+       properties.setProperty(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+       properties.setProperty(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+       return properties;
     }
 }
